@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# An example of TurtleBot 2 drawing a ~0.4 meter square with curved corners.
+# Written for indigo
+
 import rospy
 from geometry_msgs.msg import Twist
 
