@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-# An example of TurtleBot 2 drawing a ~0.4 meter square with curved corners.
+# An example of TurtleBot 2 drawing a 0.4 meter square.
 # Written for indigo
 
 import rospy
 from geometry_msgs.msg import Twist
+from math import radians
 
 class DrawASquare():
     def __init__(self):
@@ -28,8 +29,8 @@ class DrawASquare():
 
         #let's turn at 45 deg/s
         turn_cmd = Twist()
-        turn_cmd.linear.x = 0.2
-        turn_cmd.angular.z = 1.57/2; #45 deg/s in radians/s
+        turn_cmd.linear.x = 0
+        turn_cmd.angular.z = radians(45); #45 deg/s in radians/s
 
 	#two keep drawing squares.  Go forward for 2 seconds (10 x 5 HZ) then turn for 2 second
 	count = 0
