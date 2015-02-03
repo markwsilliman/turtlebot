@@ -41,38 +41,28 @@
 
 import roslib
 import rospy
-from kobuki_msgs.msg import PowerSystemEvent
+from kobuki_msgs.msg import SensorState
 
 class kobuki_battery():
+
+	kobuki_base_max_charge = 153
 
 	def __init__(self):
 		rospy.init_node("kobuki_battery")		
 
-		#monitor kobuki's battery status
-		rospy.Subscriber("/mobile_base/events/power_system",PowerSystemEvent,self.PowerEventCallback)
+		#monitor Kobuki's power and charging status.  If an event occurs (low battery, charging, not charging etc) call function SensorPowerEventCallback
+	        rospy.Subscriber("/mobile_base/sensors/core",SensorState,self.SensorPowerEventCallback)
 
 		#rospy.spin() tells the program to not exit until you press ctrl + c.  If this wasn't there... it'd subscribe and then immediatly exit (therefore stop "listening" to the thread).
 		rospy.spin();
 
 
-	def PowerEventCallback(self,data):
-		#For a complete list of Kobuki events reference: 
-		#https://github.com/yujinrobot/kobuki/blob/f99e495b2b3be1e62495119809c58ccb58909f67/kobuki_testsuite/scripts/test_events.py
-
-		if   ( data.event == PowerSystemEvent.UNPLUGGED ) :
-			rospy.loginfo("Unplugged")
-		elif ( data.event == PowerSystemEvent.PLUGGED_TO_ADAPTER ) :
-			rospy.loginfo("Plugged to adapter")
-		elif ( data.event == PowerSystemEvent.PLUGGED_TO_DOCKBASE ) :
-			rospy.loginfo("Plugged to dockbase")
-		elif ( data.event == PowerSystemEvent.CHARGE_COMPLETED ) :
-			rospy.loginfo("Charge Completed")
-		elif ( data.event == PowerSystemEvent.BATTERY_LOW ) :
-			rospy.loginfo("Battery is low")
-		elif ( data.event == PowerSystemEvent.BATTERY_CRITICAL ) :
-			rospy.loginfo("Battery is critical")
+	def SensorPowerEventCallback(self,data):
+		rospy.loginfo("Kobuki's battery is now: " + str(round(float(data.battery) / float(self.kobuki_base_max_charge) * 100)) + "%")
+		if(int(data.charger) == 0) :
+			rospy.loginfo("Not charging at docking station")
 		else:
-			rospy.loginfo("WARN: Unexpected power system event: %d"%(data.event))
+			rospy.loginfo("Charging at docking station")
 	
 
 if __name__ == '__main__':
