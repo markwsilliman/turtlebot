@@ -15,6 +15,9 @@ Redistribution and use in source and binary forms, with or without modification,
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
+# Script for simulation
+# Launch gazebo world prior to run this script
+
 from __future__ import print_function
 import sys
 import rospy
@@ -25,23 +28,35 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class take_photo:
     def __init__(self):
+
+        # Initialize
         rospy.init_node('take_photo', anonymous=False)
         self.bridge = CvBridge()
+
+        # Connect image topic
         img_topic = "/camera/rgb/image_raw"
         self.image_sub = rospy.Subscriber(img_topic, Image, self.callback)
-        # TODO: check that event has happened
 
     def callback(self, data):
+
+        # Convert image to OpenCV format
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
+
+        # Save image
         img_title = "photo.jpg"
         cv2.imwrite(img_title, cv_image)
-        cv2.waitKey(5)
-        # rospy.loginfo("Saved image " + img_title)
-        # TODO: finish the program
+        rospy.loginfo("Saved image " + img_title)
+
+        # Sleep to be sure that image was saved
+        # before shutting down script
+        rospy.sleep(2)
+        rospy.signal_shutdown("Stop")
 
 if __name__ == '__main__':
     take_photo()
+
+    # Sleep to receive data from image topic
     rospy.sleep(1)
