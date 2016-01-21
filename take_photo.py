@@ -26,16 +26,18 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
 
-class take_photo:
+class TakePhoto:
     def __init__(self):
 
-        # Initialize
-        rospy.init_node('take_photo', anonymous=False)
         self.bridge = CvBridge()
+        self.image_received = False
 
         # Connect image topic
         img_topic = "/camera/rgb/image_raw"
         self.image_sub = rospy.Subscriber(img_topic, Image, self.callback)
+
+        # Allow up to one second to connection
+        rospy.sleep(1)
 
     def callback(self, data):
 
@@ -45,18 +47,30 @@ class take_photo:
         except CvBridgeError as e:
             print(e)
 
-        # Save image
-        img_title = "photo.jpg"
-        cv2.imwrite(img_title, cv_image)
-        rospy.loginfo("Saved image " + img_title)
+        self.image_received = True
+        self.image = cv_image
 
-        # Sleep to be sure that image was saved
-        # before shutting down script
-        rospy.sleep(2)
-        rospy.signal_shutdown("Stop")
+    def take_picture(self, img_title):
+        if self.image_received:
+            # Save an image
+            cv2.imwrite(img_title, self.image)
+            return True
+        else:
+            return False
 
 if __name__ == '__main__':
-    take_photo()
 
-    # Sleep to receive data from image topic
+    # Initialize
+    rospy.init_node('take_photo', anonymous=False)
+    camera = TakePhoto()
+
+    # Take a photo
+    img_title = "photo.jpg"
+
+    if camera.take_picture(img_title):
+        rospy.loginfo("Saved image " + img_title)
+    else:
+        rospy.loginfo("No images received")
+
+    # Sleep to give the last log messages time to be sent
     rospy.sleep(1)
