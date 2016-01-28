@@ -28,7 +28,9 @@ from geometry_msgs.msg import Pose, Point, Quaternion
 class GoToPose():
     def __init__(self):
 
-	# What to do if shut down (e.g. Ctrl + C or failure)
+        self.goal_sent = False
+
+	# What to do if shut down (e.g. Ctrl-C or failure)
 	rospy.on_shutdown(self.shutdown)
 	
 	# Tell the action client that we want to spin a thread by default
@@ -41,6 +43,7 @@ class GoToPose():
     def goto(self, pos, quat):
 
         # Send a goal
+        self.goal_sent = True
 	goal = MoveBaseGoal()
 	goal.target_pose.header.frame_id = 'map'
 	goal.target_pose.header.stamp = rospy.Time.now()
@@ -53,18 +56,21 @@ class GoToPose():
 	# Allow TurtleBot up to 60 seconds to complete task
 	success = self.move_base.wait_for_result(rospy.Duration(60)) 
 
-        if not success:
-            self.move_base.cancel_goal()
-            return False
+        state = self.move_base.get_state()
+        result = False
+
+        if success and state == GoalStatus.SUCCEEDED:
+            # We made it!
+            result = True
         else:
-            state = self.move_base.get_state()
-            if state == GoalStatus.SUCCEEDED:
-                # We made it!
-                return True
-            else:
-                return False
+            self.move_base.cancel_goal()
+
+        self.goal_sent = False
+        return result
 
     def shutdown(self):
+        if self.goal_sent:
+            self.move_base.cancel_goal()
         rospy.loginfo("Stop")
         rospy.sleep(1)
 
@@ -77,6 +83,7 @@ if __name__ == '__main__':
         position = {'x': 1.22, 'y' : 2.56}
         quaternion = {'r1' : 0.000, 'r2' : 0.000, 'r3' : 0.000, 'r4' : 1.000}
 
+        rospy.loginfo("Go to (%s, %s) pose", position['x'], position['y'])
         success = navigator.goto(position, quaternion)
 
         if success:
@@ -88,5 +95,5 @@ if __name__ == '__main__':
         rospy.sleep(1)
 
     except rospy.ROSInterruptException:
-        rospy.loginfo("Exception thrown")
+        rospy.loginfo("Ctrl-C caught. Quitting")
 

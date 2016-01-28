@@ -36,6 +36,7 @@ if __name__ == '__main__':
             name = obj['filename']
 
             # Navigation
+            rospy.loginfo("Go to %s pose", name[:-4])
             success = navigator.goto(obj['position'], obj['quaternion'])
             if not success:
                 rospy.loginfo("Failed to reach %s pose", name[:-4])
@@ -48,7 +49,7 @@ if __name__ == '__main__':
             else:
                 rospy.loginfo("No images received")
 
-            sleep(1)
+            rospy.sleep(1)
 
     except rospy.ROSInterruptException:
-        rospy.loginfo("Exception thrown")
+        rospy.loginfo("Ctrl-C caught. Quitting")
