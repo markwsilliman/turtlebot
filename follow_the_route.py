@@ -33,6 +33,10 @@ if __name__ == '__main__':
         camera = TakePhoto()
 
         for obj in dataMap:
+
+            if rospy.is_shutdown():
+                break
+
             name = obj['filename']
 
             # Navigation
