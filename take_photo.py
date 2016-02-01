@@ -65,7 +65,10 @@ if __name__ == '__main__':
     camera = TakePhoto()
 
     # Take a photo
-    img_title = "photo.jpg"
+
+    # Use '_image_title' parameter from command line
+    # Default value is 'photo.jpg'
+    img_title = rospy.get_param('~image_title', 'photo.jpg')
 
     if camera.take_picture(img_title):
         rospy.loginfo("Saved image " + img_title)
